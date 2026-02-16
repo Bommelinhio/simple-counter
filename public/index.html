@@ -6,57 +6,230 @@
   <title>Besucherzähler</title>
 
   <style>
-    body {
-      margin: 0;
-      font-family: Arial, Helvetica, sans-serif;
-      background: linear-gradient(135deg, #1f1f1f, #2d2d2d);
-      color: white;
-      display: flex;
+    :root{
+      --bg1:#05010f;
+      --bg2:#0b0520;
+      --neon1:#00f5ff;
+      --neon2:#ff00e6;
+      --text:#e9e7ff;
+      --muted:#b8b3ff;
+      --glass: rgba(255,255,255,0.06);
+      --glass2: rgba(255,255,255,0.10);
+    }
+
+    * { box-sizing: border-box; }
+
+    body{
+      margin:0;
+      min-height:100vh;
+      color:var(--text);
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      overflow:hidden;
+      background:
+        radial-gradient(1200px 700px at 20% 20%, rgba(0,245,255,0.18), transparent 60%),
+        radial-gradient(900px 600px at 80% 30%, rgba(255,0,230,0.14), transparent 60%),
+        radial-gradient(1100px 800px at 50% 90%, rgba(0,245,255,0.10), transparent 60%),
+        linear-gradient(160deg, var(--bg1), var(--bg2));
+    }
+
+    /* animated neon aura */
+    .aura{
+      position: fixed;
+      inset: -40%;
+      background:
+        radial-gradient(circle at 30% 30%, rgba(0,245,255,0.20), transparent 40%),
+        radial-gradient(circle at 70% 40%, rgba(255,0,230,0.18), transparent 45%),
+        radial-gradient(circle at 50% 80%, rgba(0,245,255,0.12), transparent 45%);
+      filter: blur(30px);
+      animation: drift 12s ease-in-out infinite alternate;
+      pointer-events:none;
+      z-index:0;
+    }
+    @keyframes drift{
+      from{ transform: translate(-2%, -1%) scale(1.02); }
+      to  { transform: translate( 2%,  1%) scale(1.06); }
+    }
+
+    .wrap{
+      position: relative;
+      z-index:1;
+      height:100vh;
+      width:100vw;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding: clamp(16px, 3vw, 40px);
+    }
+
+    .card{
+      width:min(980px, 100%);
+      background: linear-gradient(180deg, var(--glass), rgba(255,255,255,0.03));
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 28px;
+      padding: clamp(18px, 4vw, 48px);
+      box-shadow:
+        0 0 60px rgba(0,245,255,0.08),
+        0 0 80px rgba(255,0,230,0.06),
+        0 18px 70px rgba(0,0,0,0.65);
+      backdrop-filter: blur(12px);
+    }
+
+    .title{
+      margin:0 0 14px 0;
+      font-size: clamp(26px, 3.5vw, 54px);
+      font-weight: 900;
+      letter-spacing: 0.6px;
+      text-align:center;
+      text-shadow:
+        0 0 12px rgba(0,245,255,0.22),
+        0 0 22px rgba(255,0,230,0.14);
+    }
+
+    .subtitle{
+      margin:0 0 26px 0;
+      text-align:center;
+      color: var(--muted);
+      font-size: clamp(14px, 1.2vw, 18px);
+      opacity:0.92;
+    }
+
+    .counterBox{
+      margin: 18px auto 28px;
+      padding: clamp(16px, 2.5vw, 26px);
+      border-radius: 22px;
+      background: linear-gradient(135deg, rgba(0,245,255,0.10), rgba(255,0,230,0.08));
+      border: 1px solid rgba(255,255,255,0.14);
+      box-shadow:
+        inset 0 0 30px rgba(0,245,255,0.10),
+        0 0 50px rgba(0,245,255,0.10),
+        0 0 60px rgba(255,0,230,0.08);
+      display:flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      height: 100vh;
-      text-align: center;
+      gap: 10px;
     }
 
-    h1 {
-      font-size: 3rem;
-      margin-bottom: 30px;
+    .label{
+      font-size: clamp(13px, 1.1vw, 16px);
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      opacity: 0.9;
     }
 
-    .counter {
-      font-size: 6rem;
-      font-weight: bold;
-      margin-bottom: 40px;
-      color: #4CAF50;
+    .counter{
+      font-variant-numeric: tabular-nums;
+      font-weight: 900;
+      font-size: clamp(56px, 8vw, 120px);
+      line-height: 1;
+      text-align:center;
+      text-shadow:
+        0 0 10px rgba(0,245,255,0.35),
+        0 0 26px rgba(255,0,230,0.18),
+        0 0 50px rgba(0,245,255,0.16);
+      transform: translateZ(0);
     }
 
-    img {
-      max-width: 300px;
-      border-radius: 12px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    .hint{
+      margin-top: 10px;
+      text-align:center;
+      font-size: clamp(12px, 1.0vw, 14px);
+      color: rgba(233,231,255,0.72);
+    }
+
+    .imageWrap{
+      margin-top: 26px;
+      display:flex;
+      justify-content:center;
+    }
+
+    .imageWrap img{
+      width: min(560px, 100%);
+      max-height: 34vh;
+      object-fit: cover;
+      border-radius: 22px;
+      border: 1px solid rgba(255,255,255,0.14);
+      box-shadow:
+        0 0 40px rgba(0,245,255,0.10),
+        0 0 55px rgba(255,0,230,0.08),
+        0 18px 60px rgba(0,0,0,0.55);
+    }
+
+    /* small “pulse” when number updated */
+    .pulse{
+      animation: pulse 420ms ease-out;
+    }
+    @keyframes pulse{
+      0%   { transform: scale(1); filter: brightness(1); }
+      50%  { transform: scale(1.03); filter: brightness(1.15); }
+      100% { transform: scale(1); filter: brightness(1); }
+    }
+
+    /* fallback for very small screens */
+    @media (max-height: 700px){
+      .imageWrap img { max-height: 26vh; }
     }
   </style>
 </head>
 
 <body>
+  <div class="aura"></div>
 
-  <h1>Jemand in deiner Nachbarschaft möchte dich Ficken!!!</h1>
+  <div class="wrap">
+    <div class="card">
+      <h1 class="title">Willkommen 👾</h1>
+      <p class="subtitle">Diese Seite wurde insgesamt so oft aufgerufen:</p>
 
-  <div class="counter" id="c">...</div>
+      <div class="counterBox">
+        <div class="label">Besuche</div>
+        <div id="c" class="counter">…</div>
+        <div class="hint">Beim Neuladen zählt es automatisch hoch.</div>
+      </div>
 
-  <img src="/meinbild.jpg" alt="Mein Bild">
+      <div class="imageWrap">
+        <!-- Bild: entweder diese Demo-URL lassen oder eigenes Bild in /public legen und src="/meinbild.jpg" setzen -->
+        <img src="/meinbild.jpg" alt="Bild">
+      </div>
+    </div>
+  </div>
 
   <script>
+    const el = document.getElementById("c");
+
+    function formatNumber(n){
+      // deutsche Tausendertrennung
+      return new Intl.NumberFormat("de-DE").format(n);
+    }
+
+    function animateCount(toValue, durationMs = 900){
+      const start = 0;
+      const startTime = performance.now();
+
+      function step(now){
+        const t = Math.min(1, (now - startTime) / durationMs);
+        // easeOutCubic
+        const eased = 1 - Math.pow(1 - t, 3);
+        const current = Math.round(start + (toValue - start) * eased);
+        el.textContent = formatNumber(current);
+        if (t < 1) requestAnimationFrame(step);
+        else {
+          el.classList.remove("pulse");
+          void el.offsetWidth; // reflow to restart animation
+          el.classList.add("pulse");
+        }
+      }
+      requestAnimationFrame(step);
+    }
+
     fetch("/api/hit")
       .then(r => r.json())
       .then(d => {
-        document.getElementById("c").textContent = d.count;
+        const target = Number(d.count || 0);
+        animateCount(target, 950);
       })
       .catch(() => {
-        document.getElementById("c").textContent = "Fehler";
+        el.textContent = "Fehler";
       });
   </script>
-
 </body>
 </html>
