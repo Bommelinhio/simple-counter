@@ -178,7 +178,7 @@
   <div class="wrap">
     <div class="card">
       <h1 class="title">Willkommen 👾</h1>
-      <p class="subtitle">Diese Seite wurde insgesamt so oft aufgerufen:</p>
+      <p class="subtitle">Jemand aus deiner Nachbarschaft möchte dich Ficken!!!</p>
 
       <div class="counterBox">
         <div class="label">Besuche</div>
@@ -201,7 +201,7 @@
       return new Intl.NumberFormat("de-DE").format(n);
     }
 
-    function animateCount(toValue, durationMs = 900){
+    function animateCount(toValue, durationMs = 2200){
       const start = 0;
       const startTime = performance.now();
 
@@ -225,7 +225,7 @@
       .then(r => r.json())
       .then(d => {
         const target = Number(d.count || 0);
-        animateCount(target, 950);
+        animateCount(target, 2200);
       })
       .catch(() => {
         el.textContent = "Fehler";
