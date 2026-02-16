@@ -1,0 +1,6 @@
+name = "simple-counter"
+compatibility_date = "2026-02-16"
+
+kv_namespaces = [
+  { binding = "COUNTER", id = "e47652c95a3241d3a6f0e3bb49e43bc3" }
+]

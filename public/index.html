@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Zähler</title>
+</head>
+<body>
+  <h1>Zähler</h1>
+  <p>Aufrufe: <span id="c">…</span></p>
+
+  <script>
+    // Zählt +1 bei jedem Seitenaufruf
+    fetch("/api/hit")
+      .then(r => r.json())
+      .then(d => document.getElementById("c").textContent = d.count)
+      .catch(() => document.getElementById("c").textContent = "Fehler");
+  </script>
+</body>
+</html>
