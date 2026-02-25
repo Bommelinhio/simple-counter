@@ -195,79 +195,119 @@
   </div>
 
   <script>
-    const el = document.getElementById("c");
+  const el = document.getElementById("c");
+  const titleEl = document.querySelector(".title");
 
-    function formatNumber(n){
-      return new Intl.NumberFormat("de-DE").format(n);
+  function formatNumber(n){
+    return new Intl.NumberFormat("de-DE").format(n);
+  }
+
+  function animateCount(toValue, durationMs = 2600){ // langsamer
+    const start = 0;
+    const startTime = performance.now();
+
+    function step(now){
+      const t = Math.min(1, (now - startTime) / durationMs);
+      const eased = 1 - Math.pow(1 - t, 3);
+      const current = Math.round(start + (toValue - start) * eased);
+      el.textContent = formatNumber(current);
+      if (t < 1) requestAnimationFrame(step);
     }
+    requestAnimationFrame(step);
+  }
 
-    function animateCount(toValue, durationMs = 2200){ // langsamer
-      const start = 0;
-      const startTime = performance.now();
+  function showAdminResetButton(){
+    // nur Admin soll das sehen
+    let wrap = document.getElementById("adminWrap");
+    if (!wrap) {
+      wrap = document.createElement("div");
+      wrap.id = "adminWrap";
+      wrap.style.position = "fixed";
+      wrap.style.right = "16px";
+      wrap.style.bottom = "16px";
+      wrap.style.zIndex = "9999";
 
-      function step(now){
-        const t = Math.min(1, (now - startTime) / durationMs);
-        const eased = 1 - Math.pow(1 - t, 3);
-        const current = Math.round(start + (toValue - start) * eased);
-        el.textContent = formatNumber(current);
-        if (t < 1) requestAnimationFrame(step);
+      const btn = document.createElement("button");
+      btn.textContent = "Reset";
+      btn.style.padding = "10px 14px";
+      btn.style.borderRadius = "12px";
+      btn.style.border = "1px solid rgba(255,255,255,0.18)";
+      btn.style.background = "rgba(255,255,255,0.08)";
+      btn.style.color = "white";
+      btn.style.cursor = "pointer";
+      btn.style.backdropFilter = "blur(10px)";
+      btn.onclick = resetCounter;
+
+      wrap.appendChild(btn);
+      document.body.appendChild(wrap);
+    }
+  }
+
+  async function loadCount(){
+    try{
+      const r = await fetch("/api/hit", { cache: "no-store" });
+      const d = await r.json();
+      animateCount(Number(d.count || 0), 2600);
+
+      if (d.admin === true) {
+        showAdminResetButton(); // Admin sieht Reset
       }
-      requestAnimationFrame(step);
+    } catch (e){
+      el.textContent = "Fehler";
+      console.error(e);
     }
+  }
 
-    async function loadCount(){
-      try{
-        const r = await fetch("/api/hit", { cache: "no-store" });
-        if (!r.ok) throw new Error("hit failed");
-        const d = await r.json();
-        animateCount(Number(d.count || 0), 2200);
-      } catch (e){
-        el.textContent = "Fehler";
-        console.error(e);
-      }
+  async function adminLogin(){
+    const password = prompt("Admin-Passwort:");
+    if (!password) return;
+
+    const r = await fetch("/api/auth", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ password })
+    });
+
+    if (r.ok){
+      alert("Admin aktiviert. Deine Aufrufe zählen nicht mehr (Cookie 30 Tage).");
+      location.reload();
+    } else {
+      alert("Falsches Passwort oder IP nicht erlaubt.");
     }
+  }
 
-    async function adminLogin(){
-      const password = prompt("Admin-Passwort:");
-      if (!password) return;
+  async function resetCounter(){
+    const ok = confirm("Zähler wirklich auf 0 setzen?");
+    if (!ok) return;
 
-      const r = await fetch("/api/auth", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ password })
-      });
-
-      if (r.ok){
-        alert("Admin aktiviert. Deine Aufrufe zählen nicht mehr.");
-        location.reload();
-      } else {
-        alert("Falsches Passwort.");
-      }
+    const r = await fetch("/api/reset", { method: "POST" });
+    if (r.ok){
+      const d = await r.json();
+      animateCount(Number(d.count || 0), 900);
+      alert("Reset OK.");
+    } else {
+      alert("Reset nicht erlaubt (kein Admin / IP nicht erlaubt).");
     }
+  }
 
-    async function resetCounter(){
-      const password = prompt("Passwort zum Zurücksetzen:");
-      if (!password) return;
+  // Unsichtbarer Trigger: 5x Klick auf Titel in 2 Sekunden
+  let clicks = 0;
+  let tmr = null;
 
-      const r = await fetch("/api/reset", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ password })
-      });
-
-      if (r.ok){
-        const d = await r.json();
-        animateCount(Number(d.count || 0), 1200);
-        alert("Zähler wurde auf 0 gesetzt.");
-      } else {
-        alert("Reset nicht erlaubt (Passwort falsch).");
-      }
+  titleEl.addEventListener("click", () => {
+    clicks++;
+    if (!tmr) {
+      tmr = setTimeout(() => { clicks = 0; tmr = null; }, 2000);
     }
+    if (clicks >= 5) {
+      clicks = 0;
+      clearTimeout(tmr);
+      tmr = null;
+      adminLogin();
+    }
+  });
 
-    document.getElementById("btnAdmin").addEventListener("click", adminLogin);
-    document.getElementById("btnReset").addEventListener("click", resetCounter);
-
-    loadCount();
-  </script>
+  loadCount();
+</script>
 </body>
 </html>
