@@ -18,9 +18,14 @@ export async function onRequest(context) {
     return new Response("Forbidden", { status: 403 });
   }
 
-  await env.COUNTER.put("counter", "0");
+  // 30 Tage Admin-Cookie
+  const cookie =
+    "admin=1; Max-Age=2592000; Path=/; Secure; SameSite=Lax";
 
-  return new Response(JSON.stringify({ ok: true, count: 0 }), {
-    headers: { "content-type": "application/json; charset=utf-8" },
+  return new Response(JSON.stringify({ ok: true }), {
+    headers: {
+      "content-type": "application/json; charset=utf-8",
+      "set-cookie": cookie,
+    },
   });
 }

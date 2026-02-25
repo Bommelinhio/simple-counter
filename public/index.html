@@ -194,42 +194,109 @@
   </div>
 
   <script>
-    const el = document.getElementById("c");
+    <script>
+  const el = document.getElementById("c");
 
-    function formatNumber(n){
-      // deutsche Tausendertrennung
-      return new Intl.NumberFormat("de-DE").format(n);
+  function formatNumber(n){
+    return new Intl.NumberFormat("de-DE").format(n);
+  }
+
+  function animateCount(toValue, durationMs = 2200){
+    const start = 0;
+    const startTime = performance.now();
+
+    function step(now){
+      const t = Math.min(1, (now - startTime) / durationMs);
+      const eased = 1 - Math.pow(1 - t, 3); // easeOutCubic
+      const current = Math.round(start + (toValue - start) * eased);
+      el.textContent = formatNumber(current);
+      if (t < 1) requestAnimationFrame(step);
     }
+    requestAnimationFrame(step);
+  }
 
-    function animateCount(toValue, durationMs = 2200){
-      const start = 0;
-      const startTime = performance.now();
-
-      function step(now){
-        const t = Math.min(1, (now - startTime) / durationMs);
-        // easeOutCubic
-        const eased = 1 - Math.pow(1 - t, 3);
-        const current = Math.round(start + (toValue - start) * eased);
-        el.textContent = formatNumber(current);
-        if (t < 1) requestAnimationFrame(step);
-        else {
-          el.classList.remove("pulse");
-          void el.offsetWidth; // reflow to restart animation
-          el.classList.add("pulse");
-        }
-      }
-      requestAnimationFrame(step);
+  async function loadCount(){
+    try{
+      const r = await fetch("/api/hit");
+      const d = await r.json();
+      animateCount(Number(d.count || 0), 2200);
+    } catch {
+      el.textContent = "Fehler";
     }
+  }
 
-    fetch("/api/hit")
-      .then(r => r.json())
-      .then(d => {
-        const target = Number(d.count || 0);
-        animateCount(target, 2200);
-      })
-      .catch(() => {
-        el.textContent = "Fehler";
-      });
+  async function adminLogin(){
+    const password = prompt("Admin-Passwort:");
+    if (!password) return;
+
+    const r = await fetch("/api/auth", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ password })
+    });
+
+    if (r.ok){
+      alert("Admin aktiviert. Ab jetzt zählt dein Aufruf nicht mehr.");
+      location.reload();
+    } else {
+      alert("Falsches Passwort.");
+    }
+  }
+
+  async function resetCounter(){
+    const password = prompt("Passwort zum Zurücksetzen:");
+    if (!password) return;
+
+    const r = await fetch("/api/reset", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ password })
+    });
+
+    if (r.ok){
+      const d = await r.json();
+      animateCount(Number(d.count || 0), 800);
+      alert("Zähler wurde auf 0 gesetzt.");
+    } else {
+      alert("Reset nicht erlaubt (Passwort falsch).");
+    }
+  }
+
+  // Buttons (einfach, ohne viel HTML-Umbaustress):
+  // Wir hängen unten rechts zwei kleine Buttons rein.
+  const btnWrap = document.createElement("div");
+  btnWrap.style.position = "fixed";
+  btnWrap.style.right = "16px";
+  btnWrap.style.bottom = "16px";
+  btnWrap.style.display = "flex";
+  btnWrap.style.gap = "10px";
+  btnWrap.style.zIndex = "9999";
+
+  const adminBtn = document.createElement("button");
+  adminBtn.textContent = "Admin";
+  adminBtn.onclick = adminLogin;
+
+  const resetBtn = document.createElement("button");
+  resetBtn.textContent = "Reset";
+  resetBtn.onclick = resetCounter;
+
+  for (const b of [adminBtn, resetBtn]){
+    b.style.padding = "10px 14px";
+    b.style.borderRadius = "12px";
+    b.style.border = "1px solid rgba(255,255,255,0.18)";
+    b.style.background = "rgba(255,255,255,0.08)";
+    b.style.color = "white";
+    b.style.cursor = "pointer";
+    b.style.backdropFilter = "blur(10px)";
+  }
+
+  btnWrap.appendChild(adminBtn);
+  btnWrap.appendChild(resetBtn);
+  document.body.appendChild(btnWrap);
+
+  // Start
+  loadCount();
+</script>
   </script>
 </body>
 </html>
