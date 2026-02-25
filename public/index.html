@@ -14,9 +14,7 @@
       --text:#e9e7ff;
       --muted:#b8b3ff;
       --glass: rgba(255,255,255,0.06);
-      --glass2: rgba(255,255,255,0.10);
     }
-
     * { box-sizing: border-box; }
 
     body{
@@ -28,11 +26,9 @@
       background:
         radial-gradient(1200px 700px at 20% 20%, rgba(0,245,255,0.18), transparent 60%),
         radial-gradient(900px 600px at 80% 30%, rgba(255,0,230,0.14), transparent 60%),
-        radial-gradient(1100px 800px at 50% 90%, rgba(0,245,255,0.10), transparent 60%),
         linear-gradient(160deg, var(--bg1), var(--bg2));
     }
 
-    /* animated neon aura */
     .aura{
       position: fixed;
       inset: -40%;
@@ -72,22 +68,20 @@
         0 0 80px rgba(255,0,230,0.06),
         0 18px 70px rgba(0,0,0,0.65);
       backdrop-filter: blur(12px);
+      text-align:center;
     }
 
     .title{
       margin:0 0 14px 0;
-      font-size: clamp(26px, 3.5vw, 54px);
+      font-size: clamp(30px, 4.2vw, 62px);
       font-weight: 900;
       letter-spacing: 0.6px;
-      text-align:center;
       text-shadow:
         0 0 12px rgba(0,245,255,0.22),
         0 0 22px rgba(255,0,230,0.14);
     }
-
     .subtitle{
       margin:0 0 26px 0;
-      text-align:center;
       color: var(--muted);
       font-size: clamp(14px, 1.2vw, 18px);
       opacity:0.92;
@@ -122,17 +116,14 @@
       font-weight: 900;
       font-size: clamp(56px, 8vw, 120px);
       line-height: 1;
-      text-align:center;
       text-shadow:
         0 0 10px rgba(0,245,255,0.35),
         0 0 26px rgba(255,0,230,0.18),
         0 0 50px rgba(0,245,255,0.16);
-      transform: translateZ(0);
     }
 
     .hint{
       margin-top: 10px;
-      text-align:center;
       font-size: clamp(12px, 1.0vw, 14px);
       color: rgba(233,231,255,0.72);
     }
@@ -142,7 +133,6 @@
       display:flex;
       justify-content:center;
     }
-
     .imageWrap img{
       width: min(560px, 100%);
       max-height: 34vh;
@@ -155,19 +145,26 @@
         0 18px 60px rgba(0,0,0,0.55);
     }
 
-    /* small “pulse” when number updated */
-    .pulse{
-      animation: pulse 420ms ease-out;
+    /* Admin Buttons */
+    .adminBar{
+      position: fixed;
+      right: 16px;
+      bottom: 16px;
+      display: flex;
+      gap: 10px;
+      z-index: 9999;
     }
-    @keyframes pulse{
-      0%   { transform: scale(1); filter: brightness(1); }
-      50%  { transform: scale(1.03); filter: brightness(1.15); }
-      100% { transform: scale(1); filter: brightness(1); }
+    .adminBar button{
+      padding: 10px 14px;
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,0.18);
+      background: rgba(255,255,255,0.08);
+      color: white;
+      cursor: pointer;
+      backdrop-filter: blur(10px);
     }
-
-    /* fallback for very small screens */
-    @media (max-height: 700px){
-      .imageWrap img { max-height: 26vh; }
+    .adminBar button:hover{
+      box-shadow: 0 0 20px rgba(0,245,255,0.18), 0 0 24px rgba(255,0,230,0.12);
     }
   </style>
 </head>
@@ -183,120 +180,94 @@
       <div class="counterBox">
         <div class="label">Besuche</div>
         <div id="c" class="counter">…</div>
-        <div class="hint">Du willst also auch gefickt werden</div>
+        <div class="hint">Beim Neuladen zählt es automatisch hoch (außer als Admin).</div>
       </div>
 
       <div class="imageWrap">
-        <!-- Bild: entweder diese Demo-URL lassen oder eigenes Bild in /public legen und src="/meinbild.jpg" setzen -->
-        <img src="/meinbild.jpg" alt="Bild">
+        <img src="https://picsum.photos/900/600" alt="Bild">
       </div>
     </div>
   </div>
 
+  <div class="adminBar">
+    <button id="btnAdmin">Admin</button>
+    <button id="btnReset">Reset</button>
+  </div>
+
   <script>
-    <script>
-  const el = document.getElementById("c");
+    const el = document.getElementById("c");
 
-  function formatNumber(n){
-    return new Intl.NumberFormat("de-DE").format(n);
-  }
-
-  function animateCount(toValue, durationMs = 2200){
-    const start = 0;
-    const startTime = performance.now();
-
-    function step(now){
-      const t = Math.min(1, (now - startTime) / durationMs);
-      const eased = 1 - Math.pow(1 - t, 3); // easeOutCubic
-      const current = Math.round(start + (toValue - start) * eased);
-      el.textContent = formatNumber(current);
-      if (t < 1) requestAnimationFrame(step);
+    function formatNumber(n){
+      return new Intl.NumberFormat("de-DE").format(n);
     }
-    requestAnimationFrame(step);
-  }
 
-  async function loadCount(){
-    try{
-      const r = await fetch("/api/hit");
-      const d = await r.json();
-      animateCount(Number(d.count || 0), 2200);
-    } catch {
-      el.textContent = "Fehler";
+    function animateCount(toValue, durationMs = 2200){ // langsamer
+      const start = 0;
+      const startTime = performance.now();
+
+      function step(now){
+        const t = Math.min(1, (now - startTime) / durationMs);
+        const eased = 1 - Math.pow(1 - t, 3);
+        const current = Math.round(start + (toValue - start) * eased);
+        el.textContent = formatNumber(current);
+        if (t < 1) requestAnimationFrame(step);
+      }
+      requestAnimationFrame(step);
     }
-  }
 
-  async function adminLogin(){
-    const password = prompt("Admin-Passwort:");
-    if (!password) return;
-
-    const r = await fetch("/api/auth", {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ password })
-    });
-
-    if (r.ok){
-      alert("Admin aktiviert. Ab jetzt zählt dein Aufruf nicht mehr.");
-      location.reload();
-    } else {
-      alert("Falsches Passwort.");
+    async function loadCount(){
+      try{
+        const r = await fetch("/api/hit", { cache: "no-store" });
+        if (!r.ok) throw new Error("hit failed");
+        const d = await r.json();
+        animateCount(Number(d.count || 0), 2200);
+      } catch (e){
+        el.textContent = "Fehler";
+        console.error(e);
+      }
     }
-  }
 
-  async function resetCounter(){
-    const password = prompt("Passwort zum Zurücksetzen:");
-    if (!password) return;
+    async function adminLogin(){
+      const password = prompt("Admin-Passwort:");
+      if (!password) return;
 
-    const r = await fetch("/api/reset", {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ password })
-    });
+      const r = await fetch("/api/auth", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ password })
+      });
 
-    if (r.ok){
-      const d = await r.json();
-      animateCount(Number(d.count || 0), 800);
-      alert("Zähler wurde auf 0 gesetzt.");
-    } else {
-      alert("Reset nicht erlaubt (Passwort falsch).");
+      if (r.ok){
+        alert("Admin aktiviert. Deine Aufrufe zählen nicht mehr.");
+        location.reload();
+      } else {
+        alert("Falsches Passwort.");
+      }
     }
-  }
 
-  // Buttons (einfach, ohne viel HTML-Umbaustress):
-  // Wir hängen unten rechts zwei kleine Buttons rein.
-  const btnWrap = document.createElement("div");
-  btnWrap.style.position = "fixed";
-  btnWrap.style.right = "16px";
-  btnWrap.style.bottom = "16px";
-  btnWrap.style.display = "flex";
-  btnWrap.style.gap = "10px";
-  btnWrap.style.zIndex = "9999";
+    async function resetCounter(){
+      const password = prompt("Passwort zum Zurücksetzen:");
+      if (!password) return;
 
-  const adminBtn = document.createElement("button");
-  adminBtn.textContent = "Admin";
-  adminBtn.onclick = adminLogin;
+      const r = await fetch("/api/reset", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ password })
+      });
 
-  const resetBtn = document.createElement("button");
-  resetBtn.textContent = "Reset";
-  resetBtn.onclick = resetCounter;
+      if (r.ok){
+        const d = await r.json();
+        animateCount(Number(d.count || 0), 1200);
+        alert("Zähler wurde auf 0 gesetzt.");
+      } else {
+        alert("Reset nicht erlaubt (Passwort falsch).");
+      }
+    }
 
-  for (const b of [adminBtn, resetBtn]){
-    b.style.padding = "10px 14px";
-    b.style.borderRadius = "12px";
-    b.style.border = "1px solid rgba(255,255,255,0.18)";
-    b.style.background = "rgba(255,255,255,0.08)";
-    b.style.color = "white";
-    b.style.cursor = "pointer";
-    b.style.backdropFilter = "blur(10px)";
-  }
+    document.getElementById("btnAdmin").addEventListener("click", adminLogin);
+    document.getElementById("btnReset").addEventListener("click", resetCounter);
 
-  btnWrap.appendChild(adminBtn);
-  btnWrap.appendChild(resetBtn);
-  document.body.appendChild(btnWrap);
-
-  // Start
-  loadCount();
-</script>
+    loadCount();
   </script>
 </body>
 </html>
